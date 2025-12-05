@@ -7,7 +7,7 @@
     "lilfetch": "./bin/lilfetch.js"
   },
   "scripts": {
-    "postinstall": "node setup-python.js",
+    "postinstall": "node install-python-deps.js",
     "pack": "npm pack",
     "dev": "node bin/lilfetch.js",
     "global-install": "npm install -g ."
