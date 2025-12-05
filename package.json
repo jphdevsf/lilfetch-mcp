@@ -10,7 +10,8 @@
     "postinstall": "node install-python-deps.js",
     "pack": "npm pack",
     "dev": "node bin/lilfetch.js",
-    "global-install": "npm install -g ."
+    "global-install": "npm install -g .",
+    "global-uninstall": "npm uninstall -g lilfetch && rm -rf ~/.lilfetch-venv"
   },
   "keywords": ["mcp", "scraper", "markdown", "web"],
   "author": "jphdevsf",

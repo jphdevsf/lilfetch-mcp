@@ -134,7 +134,7 @@ function installPythonDeps() {
     console.error(`lilFetch: Playwright browsers successfully installed ${installScope}.`);
   }
 
-  console.error(`lilFetch: ${installType} setup complete!`);
+  console.error(`lilFetch: ${installType} setup complete, ready for input!`);
 }
 
 // Run it

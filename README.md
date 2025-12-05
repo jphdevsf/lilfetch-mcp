@@ -93,6 +93,45 @@ For testing/extending in the repo.
    Use lilFetch to scrape top news headlines from www.cnn.com and write to a markdown file in root of my repo.
    ```
 
+## Uninstallation
+
+To fully remove a global installation (including the npm package and Python virtual environment):
+
+### Global Uninstall
+From the repo directory (or anywhere):
+```
+npm run global-uninstall
+```
+- This runs `npm uninstall -g lilfetch` to remove the global npm package and binary.
+- Followed by `rm -rf ~/.lilfetch-venv` to delete the user-wide Python venv (including installed deps and Playwright browsers).
+- **Warning**: The `rm -rf` command is irreversible. It only affects the `.lilfetch-venv` directory in your home folder. Back up if needed (unlikely).
+
+### Manual Uninstall (Alternative)
+1. Remove npm package:
+   ```
+   npm uninstall -g lilfetch
+   ```
+2. Remove Python venv:
+   ```
+   rm -rf ~/.lilfetch-venv
+   ```
+   - On Windows: `rmdir /s /q %USERPROFILE%\.lilfetch-venv`
+
+### Local Uninstall
+For local installs (e.g., after `npm install`):
+```
+npm uninstall
+rm -rf .venv
+```
+- This removes the local Node modules and repo-specific Python venv.
+
+### Verification
+- `npm list -g --depth=0` (no `lilfetch`).
+- `which lilfetch` (empty).
+- `ls ~/.lilfetch-venv` (no such file).
+
+For local: `rm -rf node_modules .venv` and verify no `./.bin/lilfetch`.
+
 ## Development
 - Edit `mcp_server.py` for Python logic.
 - Update `bin/lilfetch.js` for wrapper changes.

@@ -128,7 +128,7 @@ function setupPython() {
     console.error('lilFetch: Playwright browsers installed/verified.');
   }
 
-  console.error('lilFetch: Setup complete!');
+  console.error('lilFetch: setup complete, ready for input!');
 }
 
 // Run setup on first invocation (or always, it's idempotent)
