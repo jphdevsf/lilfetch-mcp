@@ -4,44 +4,47 @@
 An MCP (Model Context Protocol) server that scrapes webpages using [crawl4ai](https://github.com/unclecode/crawl4ai) and Playwright for more robust scraping.
 
 ## Features
-- Scrape multiple URLs to structured Markdown.
-- Handles dynamic content with browser automation (via Playwright).
-- Outputs timestamped filenames with domain and description.
-- Easy integration with VS Code via MCP.
+- Enables html and/or text scraping of one or more urls directly in your chat prompt. Use the scraped response in followup queries for market research summarization, context for new file creation, etc.
+- Leverages Playwright and a headless instance of Chromium to load JS heavy sites and web apps where basic `#fetch` and `curl` commands fall short.
+- Strong focus on minimal commands and configuration to install and get scraping.
 
-## Quick Start (For JS/Node Developers)
-No Python knowledge required! Just clone, install via npm, and configure in VS Code. The recommended global install makes it usable in *any* workspace without path management.
+## Prerequisites
 
-### Option 1: Global Install (Recommended - Effortless, Cross-Workspace Use)
-Install once globally, then `npx lilfetch` works anywhere. The Python backend (`.venv`/deps) stays in the cloned repo.
+Before installing, ensure:
+- **Node.js 14+**: Download from [nodejs.org](https://nodejs.org) or via Homebrew (`brew install node` on macOS).
+- **Python 3.8+**: Auto-detected during setup. Install from [python.org](https://python.org) or Homebrew (`brew install python` on macOS). If using pyenv, set a 3.8+ version active (`pyenv global 3.12.0`).
+- **First Run Time**: Setup downloads ~200MB (Playwright browsers) and takes 1-2 minutes.
 
-1. **Clone the Repo** (do this once; keep the folder for the backend):
+**Global NPM Permissions (One-Time Setup, macOS/Linux)**: To avoid sudo for global installs:
+1. `mkdir ~/.npm-global`
+2. `npm config set prefix '~/.npm-global'`
+3. Add to `~/.zshrc` or `~/.bash_profile`: `export PATH=~/.npm-global/bin:$PATH`
+4. Reload shell: `source ~/.zshrc`
+5. Rerun installs without sudo.
+
+On Windows, use an admin prompt if permission errors occur.
+
+## Installation Options
+
+Install globally for use across workspaces, or restrict to local installation if you just want to test in this repo or enhance it further.
+
+### Option 1: Global Install
+For running `npx lilfetch` from any directory (portable CLI).
+
+1. Clone the Repo
    ```
-   git clone https://github.com/yourusername/webpage-to-readme-scraper.git lilfetch-install
-   cd lilfetch-install
+   git clone https://github.com/jphdevsf/lilfetch-mcp.git lilfetch-mcp
+   cd lilfetch-mcp
    ```
 
-2. **Install Node Dependencies** (sets up Python backend automatically):
-   ```
-   npm install
-   ```
-   - Runs `postinstall` to create `.venv`, install `crawl4ai`/Playwright, and browsers.
-   - Requires: Node.js 14+, Python 3.8+ (auto-detected; install via [python.org](https://python.org) or `brew install python` on macOS if missing). First run takes 1-2 min.
-
-3. **Install Globally** (one-time; enables `npx lilfetch` in any terminal/workspace):
+2. Install Globally
    ```
    npm run global-install
    ```
-   - Or: `npm install -g .`
-   - **macOS/Linux Note**: If permission error, configure user-owned globals (one-time):
-     ```
-     mkdir ~/.npm-global
-     npm config set prefix '~/.npm-global'
-     export PATH=~/.npm-global/bin:$PATH  # Add to ~/.zshrc or ~/.bash_profile
-     ```
-     Then rerun without `sudo`. On Windows, use admin prompt if needed.
+   - Or directly: `npm install -g .`
+   - Sets up Python venv in `~/.lilfetch-venv` (user-wide).
 
-4. **Configure in Any VS Code Workspace** (add to `.vscode/mcp.json` or global MCP settings):
+3. Configure in Any VS Code Workspace (add to `.vscode/mcp.json` or global MCP settings):
    ```jsonc
    {
      "servers": {
@@ -53,54 +56,43 @@ Install once globally, then `npx lilfetch` works anywhere. The Python backend (`
      }
    }
    ```
-   - No paths or variables! Reload window (Cmd+Shift+P > "Developer: Reload Window") to activate.
 
-5. **Test It**:
-   - Manual: In any terminal, `npx lilfetch` (starts server; send MCP JSON to stdin or Ctrl+C to stop).
-   - In Copilot Chat (any workspace): "Use lilFetch to scrape https://example.com to Markdown." Should output JSON with scraped Markdown.
-   - Verify setup: If errors, check console for Python/browser issues (see Troubleshooting).
+4. Test It
+   - From any dir: `npx lilfetch` (starts MCP server).
+   - In VS Code: Use Copilot Chat: "Use lilFetch to scrape https://example.com".
 
-### Option 2: Local Tarball (Fallback - Per-Project Isolation)
-If avoiding globals (e.g., restricted env), use the tgz method:
+### Option 2: Local Install
+For testing/extending in the repo.
 
-1. Follow steps 1-2 from Option 1.
-2. **Pack**:
+1. Clone the Repo
    ```
-   npm run pack
+   git clone https://github.com/jphdevsf/lilfetch-mcp.git lilfetch-mcp
+   cd lilfetch-mcp
    ```
-   - Creates `lilfetch-1.0.0.tgz`.
 
-3. **Configure in Target Workspace** (use absolute path to tgz):
+2. Install Locally
+   ```
+   npm install
+   ```
+   - Sets up `./node_modules/lilfetch/` and `.bin/lilfetch`.
+   - Python venv in repo `.venv` (local to this project).
+
+3. MCP.json Workspace Configuration
+   Navigate to `.vscode/mcp.json` (create if missing) and add:
    ```jsonc
    {
      "servers": {
        "lilFetch": {
          "type": "stdio",
-         "command": "npx",
-         "args": ["/absolute/path/to/lilfetch-install/lilfetch-1.0.0.tgz"]
+         "command": "./node_modules/.bin/lilfetch"
        }
      }
    }
    ```
-4. Test as above; repack after changes.
 
-## Tool Usage
-The server exposes one tool: `scrape_to_markdown`
-- **Parameters**:
-  - `urls`: Array of strings (required) – URLs to scrape.
-  - `description`: String (optional, default "scrape") – Label for output files.
-- **Output**: JSON array with scraped Markdown, success status, and filename suggestions.
-
-Example call (in MCP context):
-```json
-{
-  "name": "scrape_to_markdown",
-  "arguments": {
-    "urls": ["https://example.com"],
-    "description": "example-site"
-  }
-}
-```
+4. Test It
+   - Run locally: `npm run dev` or `./node_modules/.bin/lilfetch`.
+   - In VS Code (open repo root): Use Copilot Chat as above.
 
 ## Development
 - Edit `mcp_server.py` for Python logic.
@@ -108,15 +100,15 @@ Example call (in MCP context):
 - Bump version in `package.json`, then `npm run pack`.
 - For global testing: `npm install -g .` then `npx lilfetch`.
 
-## Requirements
-- Node.js >=14
-- Python 3.8+ (with pip)
-- ~200MB disk for browsers (Playwright)
-
 ## Troubleshooting
-- **Python not found**: Install Python 3.8+ and ensure `python3` is in PATH.
-- **Venv issues**: Delete `.venv` and rerun `npm install`.
-- **Browser errors**: Run `python -m playwright install` manually in `.venv/bin`.
-- **Windows users**: Use `python` instead of `python3` if needed; adjust paths in `bin/lilfetch.
+
+- **Permission Errors (Global Install)**: See Prerequisites for user-owned NPM setup. Avoid sudo—use the config steps.
+- **Python Not Found/Version Error**: Ensure Python 3.8+ is in PATH. For pyenv: `pyenv install 3.12.0 && pyenv global 3.12.0`, then re-run install. Check: `python3 --version`.
+- **Venv/Deps Fail**: For local: Delete `.venv` and re-run `npm install`. For global: Delete `~/.lilfetch-venv` and re-run `npm install -g .`. Manual fix (local): `python3 -m venv .venv && .venv/bin/pip install -r requirements.txt && .venv/bin/python -m playwright install`. Manual fix (global): `python3 -m venv ~/.lilfetch-venv && ~/.lilfetch-venv/bin/pip install -r requirements.txt && ~/.lilfetch-venv/bin/python -m playwright install`.
+- **Playwright Browsers Missing**: Run `python -m playwright install` in the venv (or manually as logged).
+- **MCP Not Detected in VS Code**: Restart VS Code after config; ensure workspace is open correctly.
+- **Uninstall**:
+  - Global: `npm uninstall -g lilfetch` + `rm -rf ~/.lilfetch-venv`.
+  - Local: `rm -rf node_modules package-lock.json .venv`.
 
 License: MIT

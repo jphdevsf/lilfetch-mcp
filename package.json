@@ -13,7 +13,7 @@
     "global-install": "npm install -g ."
   },
   "keywords": ["mcp", "scraper", "markdown", "web"],
-  "author": "Jacob",
+  "author": "jphdevsf",
   "license": "MIT",
   "dependencies": {
     "child_process": "^1.0.0"

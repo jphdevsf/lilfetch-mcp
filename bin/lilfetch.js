@@ -5,11 +5,12 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
-// Paths (relative to repo root, assuming cwd is repo)
-const REPO_ROOT = process.cwd();
-const VENV_PATH = path.join(REPO_ROOT, '.venv');
-const REQ_FILE = path.join(REPO_ROOT, 'requirements.txt');
-const MCP_SCRIPT = path.join(REPO_ROOT, 'mcp_server.py');
+// Prefer local venv if in repo, fallback to global for portability
+const LOCAL_VENV_DIR = path.join(process.cwd(), '.venv');
+const GLOBAL_VENV_DIR = path.join(os.homedir(), '.lilfetch-venv');
+const VENV_PATH = fs.existsSync(LOCAL_VENV_DIR) ? LOCAL_VENV_DIR : GLOBAL_VENV_DIR;
+const REQ_FILE = path.join(__dirname, '..', 'requirements.txt');
+const MCP_SCRIPT = path.join(__dirname, '..', 'mcp_server.py');
 
 // Setup function: Create venv, install deps, install browsers if needed
 function setupPython() {
@@ -18,12 +19,27 @@ function setupPython() {
   // Check for Python 3.8+
   const pythonCheck = spawnSync('python3', ['--version']);
   if (pythonCheck.status !== 0) {
-    console.error('lilFetch: Python 3 not found. Please install Python 3.8+ from python.org or via Homebrew: brew install python');
+    // Detect pyenv
+    const pyenvCheck = spawnSync('pyenv', ['--version']);
+    if (pyenvCheck.status === 0) {
+      console.error('lilFetch: Python 3 not found. If using pyenv, install a 3.8+ version (e.g., pyenv install 3.12.0 && pyenv global 3.12.0), then re-run npm install.');
+    } else {
+      console.error('lilFetch: Python 3 not found. Please install Python 3.8+ from python.org or via Homebrew: brew install python');
+    }
     process.exit(1);
   }
   const version = pythonCheck.stdout.toString().trim();
-  if (!version.includes('3.8') && !version.includes('3.9') && !version.includes('3.10') && !version.includes('3.11') && !version.includes('3.12')) {
-    console.error('lilFetch: Requires Python 3.8+. Detected:', version);
+  // Parse Python version (e.g., "Python 3.12.0" -> major.minor)
+  const pyVersionStr = version.replace(/^Python /, '');
+  const match = pyVersionStr.match(/^(\d+)\.(\d+)/);
+  if (!match || parseInt(match[1]) !== 3 || parseInt(match[2]) < 8) {
+    // Detect pyenv
+    const pyenvCheck = spawnSync('pyenv', ['--version']);
+    if (pyenvCheck.status === 0) {
+      console.error('lilFetch: Requires Python 3.8+. Detected:', version, '. If using pyenv, switch to a 3.8+ version: pyenv install 3.12.0 && pyenv global 3.12.0, then re-run install.');
+    } else {
+      console.error('lilFetch: Requires Python 3.8+. Detected:', version);
+    }
     process.exit(1);
   }
   console.error('lilFetch: Python version OK:', version);
@@ -35,7 +51,8 @@ function setupPython() {
       console.error('lilFetch: Failed to create virtual environment.');
       process.exit(1);
     }
-    console.error('lilFetch: Virtual environment created.');
+    const venvLocation = fs.existsSync(path.join(process.cwd(), '.venv')) ? 'repo root (.venv)' : 'user home (~/.lilfetch-venv)';
+    console.error('lilFetch: Virtual environment created at', venvLocation);
   }
 
   // Activate venv and install requirements
@@ -60,7 +77,8 @@ function setupPython() {
   // Install Playwright browsers (for crawl4ai)
   const pwInstall = spawnSync(venvPython, ['-m', 'playwright', 'install'], { stdio: 'inherit' });
   if (pwInstall.status !== 0) {
-    console.error('lilFetch: Failed to install Playwright browsers. Run manually: python -m playwright install');
+    const manualCmd = path.join(VENV_PATH, pythonBin);
+    console.error('lilFetch: Failed to install Playwright browsers. Run manually:', manualCmd, '-m playwright install');
     // Don't exit, as it might work without on some systems
   } else {
     console.error('lilFetch: Playwright browsers installed.');
@@ -80,7 +98,7 @@ const pythonProc = spawn(venvPython, [MCP_SCRIPT], {
   stdio: 'inherit',
   env: {
     ...process.env,
-    PYTHONPATH: REPO_ROOT
+    PYTHONPATH: path.dirname(MCP_SCRIPT)
   }
 });
 
