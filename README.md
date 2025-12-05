@@ -1,8 +1,7 @@
-# Under Construction
+# UNDER CONSTRUCTION
 
-# lilFetch: Webpage to README Scraper MCP Server
-
-lilFetch is an MCP (Model Context Protocol) server that scrapes webpages and converts them to clean Markdown, ideal for READMEs, docs, or workflows. It uses [crawl4ai](https://github.com/unclecode/crawl4ai) under the hood for robust web scraping.
+# lilFetch
+An MCP (Model Context Protocol) server that scrapes webpages using [crawl4ai](https://github.com/unclecode/crawl4ai) and Playwright for more robust scraping.
 
 ## Features
 - Scrape multiple URLs to structured Markdown.
@@ -118,10 +117,6 @@ Example call (in MCP context):
 - **Python not found**: Install Python 3.8+ and ensure `python3` is in PATH.
 - **Venv issues**: Delete `.venv` and rerun `npm install`.
 - **Browser errors**: Run `python -m playwright install` manually in `.venv/bin`.
-- **Windows users**: Use `python` instead of `python3` if needed; adjust paths in `bin/lilfetch.js`.
-
-## Future Plans
-- Publish to npm as `@jacob/lilfetch` for `npx -y @jacob/lilfetch`.
-- Add more tools (e.g., CSS selector extraction).
+- **Windows users**: Use `python` instead of `python3` if needed; adjust paths in `bin/lilfetch.
 
 License: MIT
