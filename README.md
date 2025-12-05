@@ -1,7 +1,7 @@
 # UNDER CONSTRUCTION
 
 # lilFetch
-An MCP (Model Context Protocol) server that scrapes webpages using [crawl4ai](https://github.com/unclecode/crawl4ai) and Playwright for more robust scraping.
+An MCP (Model Context Protocol) server that scrapes webpages using [crawl4ai](https://github.com/unclecode/crawl4ai) and Playwright for more robust scraping. Tested on CoPilot in VSCode but may work for others.
 
 ## Features
 - Enables html and/or text scraping of one or more urls directly in your chat prompt. Use the scraped response in followup queries for market research summarization, context for new file creation, etc.
@@ -15,16 +15,7 @@ Before installing, ensure:
 - **Python 3.8+**: Auto-detected during setup. Install from [python.org](https://python.org) or Homebrew (`brew install python` on macOS). If using pyenv, set a 3.8+ version active (`pyenv global 3.12.0`).
 - **First Run Time**: Setup downloads ~200MB (Playwright browsers) and takes 1-2 minutes.
 
-**Global NPM Permissions (One-Time Setup, macOS/Linux)**: To avoid sudo for global installs:
-1. `mkdir ~/.npm-global`
-2. `npm config set prefix '~/.npm-global'`
-3. Add to `~/.zshrc` or `~/.bash_profile`: `export PATH=~/.npm-global/bin:$PATH`
-4. Reload shell: `source ~/.zshrc`
-5. Rerun installs without sudo.
-
-On Windows, use an admin prompt if permission errors occur.
-
-## Installation Options
+## Installation
 
 Install globally for use across workspaces, or restrict to local installation if you just want to test in this repo or enhance it further.
 
@@ -41,7 +32,6 @@ For running `npx lilfetch` from any directory (portable CLI).
    ```
    npm run global-install
    ```
-   - Or directly: `npm install -g .`
    - Sets up Python venv in `~/.lilfetch-venv` (user-wide).
 
 3. Configure in Any VS Code Workspace (add to `.vscode/mcp.json` or global MCP settings):
@@ -58,8 +48,11 @@ For running `npx lilfetch` from any directory (portable CLI).
    ```
 
 4. Test It
-   - From any dir: `npx lilfetch` (starts MCP server).
-   - In VS Code: Use Copilot Chat: "Use lilFetch to scrape https://example.com".
+   - In new terminal window, run `npx lilfetch` to start MCP server.
+   - In VS Code, prompt with something like...
+   ```
+   Use lilFetch to scrape top news headlines from www.cnn.com and write to a markdown file in root of my repo.
+   ```
 
 ### Option 2: Local Install
 For testing/extending in the repo.
@@ -91,8 +84,11 @@ For testing/extending in the repo.
    ```
 
 4. Test It
-   - Run locally: `npm run dev` or `./node_modules/.bin/lilfetch`.
-   - In VS Code (open repo root): Use Copilot Chat as above.
+   - In new terminal window, navigate to this repo and run `npm run dev` or `./node_modules/.bin/lilfetch`.
+   - In VS Code, prompt with something like...
+   ```
+   Use lilFetch to scrape top news headlines from www.cnn.com and write to a markdown file in root of my repo.
+   ```
 
 ## Development
 - Edit `mcp_server.py` for Python logic.
