@@ -12,7 +12,7 @@ An MCP (Model Context Protocol) server that scrapes webpages using [crawl4ai](ht
 
 Before installing, ensure:
 - **Node.js 14+**: Download from [nodejs.org](https://nodejs.org) or via Homebrew (`brew install node` on macOS).
-- **Python 3.8+**: Auto-detected during setup. Install from [python.org](https://python.org) or Homebrew (`brew install python` on macOS). If using pyenv, set a 3.8+ version active (`pyenv global 3.12.0`).
+- **Python 3.10+**: Auto-detected during setup. Install from [python.org](https://python.org) or Homebrew (`brew install python@3.12` on macOS). If using pyenv, set a 3.10+ version active (`pyenv global 3.12.0`).
 - **First Run Time**: Setup downloads ~200MB (Playwright browsers) and takes 1-2 minutes.
 
 ## Installation
@@ -77,11 +77,14 @@ For testing/extending in the repo.
      "servers": {
        "lilFetch": {
          "type": "stdio",
-         "command": "./node_modules/.bin/lilfetch"
+         "command": "node",
+         "args": ["bin/lilfetch.js"]
        }
      }
    }
    ```
+
+   **Note:** Ensure `bin/lilfetch.js` is executable: Run `chmod +x bin/lilfetch.js` in the terminal.
 
 4. Test It
    - In new terminal window, navigate to this repo and run `npm run dev` or `./node_modules/.bin/lilfetch`.

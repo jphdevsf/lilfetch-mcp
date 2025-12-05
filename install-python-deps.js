@@ -10,36 +10,87 @@ const isGlobalInstall = process.env.npm_config_global === 'true';
 const VENV_PATH = isGlobalInstall ? path.join(os.homedir(), '.lilfetch-venv') : path.join(process.cwd(), '.venv');
 const REQ_FILE = path.join(__dirname, '..', 'requirements.txt');
 
-function setupPython() {
-  console.error('lilFetch: Setting up Python environment...');
+const installScope = isGlobalInstall ? 'globally' : 'locally';
+const installType = isGlobalInstall ? 'Global' : 'Local';
 
-  // Check for Python 3.8+
-  const pythonCheck = spawnSync('python3', ['--version']);
-  if (pythonCheck.status !== 0) {
-    // Detect pyenv
+function installPythonDeps() {
+  console.error('lilFetch: Setting up Python environment...');
+  console.error('lilFetch: ' + installType + ' installation detected.');
+
+  // Detect and validate Python 3.10+
+  let pythonBin;
+  let version;
+  const isWindows = os.platform() === 'win32';
+
+  if (isWindows) {
+    // Windows: Try Python Launcher first
+    const pyCheck = spawnSync('py', ['-3', '--version']);
+    if (pyCheck.status === 0) {
+      pythonBin = 'py -3';
+      version = pyCheck.stdout.toString().trim();
+    } else {
+      // Fallback to 'python'
+      const pythonCheck = spawnSync('python', ['--version']);
+      if (pythonCheck.status === 0) {
+        pythonBin = 'python';
+        version = pythonCheck.stdout.toString().trim();
+      }
+    }
+  } else {
+    // macOS/Linux: Try multiple Python 3 versions in order of preference
+    const possibleBins = ['python3.12', 'python3.11', 'python3', 'python'];
+    for (const bin of possibleBins) {
+      const check = spawnSync(bin, ['--version']);
+      if (check.status === 0) {
+        const ver = check.stdout.toString().trim();
+        // Quick check if 3.10+
+        const pyVersionStr = ver.replace(/^Python /, '');
+        const match = pyVersionStr.match(/^(\d+)\.(\d+)/);
+        if (match && parseInt(match[1]) === 3 && parseInt(match[2]) >= 10) {
+          pythonBin = bin;
+          version = ver;
+          break;
+        }
+      }
+    }
+  }
+
+  if (!pythonBin || !version) {
+    let installMsg = 'lilFetch: Python 3.10+ not found.';
+    if (isWindows) {
+      installMsg += ' Install from python.org or Microsoft Store, then re-run npm install.';
+    } else {
+      installMsg += ' Install via Homebrew: brew install python@3.12 (or python@3.11), then add to PATH and re-run npm install.';
+    }
+    // Check for pyenv
     const pyenvCheck = spawnSync('pyenv', ['--version']);
     if (pyenvCheck.status === 0) {
-      console.error('lilFetch: Python 3 not found. If using pyenv, install or switch to Python 3.8+ globally and re-run npm install');
+      installMsg += ' If using pyenv, run: pyenv install 3.12.0 && pyenv global 3.12.0';
+    }
+    console.error(installMsg);
+    process.exit(1);
+  }
+
+  // Parse version (e.g., "Python 3.12.0" -> 3.12)
+  const pyVersionStr = version.replace(/^Python /, '');
+  const match = pyVersionStr.match(/^(\d+)\.(\d+)/);
+  if (!match || parseInt(match[1]) !== 3 || parseInt(match[2]) < 10) {
+    console.error(`lilFetch: Requires Python 3.10+. Detected: ${version}.`);
+    if (isWindows) {
+      console.error('Install Python 3.10+ from python.org and ensure "py" or "python" is in PATH.');
     } else {
-      console.error('lilFetch: Python 3 not found. Please install Python 3.8+ from python.org or via Homebrew: brew install python');
+      console.error('Install via Homebrew: brew install python@3.12 (or python@3.11) and add to PATH.');
     }
     process.exit(1);
   }
-  const version = pythonCheck.stdout.toString().trim();
-  // Parse Python version (e.g., "Python 3.12.0" -> major.minor)
-  const pyVersionStr = version.replace(/^Python /, '');
-  const match = pyVersionStr.match(/^(\d+)\.(\d+)/);
-  if (!match || parseInt(match[1]) !== 3 || parseInt(match[2]) < 8) {
-    console.error('lilFetch: Requires Python 3.8+. Detected:', version);
-    process.exit(1);
-  }
-  console.error('lilFetch: Python version OK:', version);
+  console.error(`lilFetch: Python ${pythonBin} version OK: ${version}`);
 
   // Create venv if not exists
   if (!fs.existsSync(VENV_PATH)) {
-    const venvCreate = spawnSync('python3', ['-m', 'venv', VENV_PATH]);
+    const venvArgs = isWindows ? ['-3', '-m', 'venv', VENV_PATH] : ['-m', 'venv', VENV_PATH];
+    const venvCreate = spawnSync(pythonBin, venvArgs);
     if (venvCreate.status !== 0) {
-      console.error('lilFetch: Failed to create virtual environment.');
+      console.error(`lilFetch: Failed to create virtual environment ${installScope}.`);
       process.exit(1);
     }
     const venvLocation = isGlobalInstall ? 'user home (~/.lilfetch-venv)' : 'repo root (.venv)';
@@ -47,37 +98,44 @@ function setupPython() {
   }
 
   // Activate venv and install requirements
-  const pythonBin = os.platform() === 'win32' ? 'Scripts/python.exe' : 'bin/python';
-  const pipBin = os.platform() === 'win32' ? 'Scripts/pip.exe' : 'bin/pip';
-  const venvPython = path.join(VENV_PATH, pythonBin);
-  const venvPip = path.join(VENV_PATH, pipBin);
+  const venvPythonDir = isWindows ? 'Scripts' : 'bin';
+  const venvPython = path.join(VENV_PATH, venvPythonDir, isWindows ? 'python.exe' : 'python');
+  const venvPip = path.join(VENV_PATH, venvPythonDir, isWindows ? 'pip.exe' : 'pip');
 
-  // Upgrade pip
-  spawnSync(venvPip, ['install', '--upgrade', 'pip'], { stdio: 'inherit' });
+  // Upgrade pip (use venv's pip directly)
+  const pipUpgrade = spawnSync(venvPip, ['install', '--upgrade', 'pip'], { stdio: 'inherit' });
 
   // Install requirements
   if (fs.existsSync(REQ_FILE)) {
     const installReq = spawnSync(venvPip, ['install', '-r', REQ_FILE], { stdio: 'inherit' });
     if (installReq.status !== 0) {
-      console.error('lilFetch: Failed to install Python dependencies.');
+      console.error(`lilFetch: Failed to install Python dependencies ${installScope}.`);
       process.exit(1);
     }
-    console.error('lilFetch: Python dependencies installed.');
+    console.error(`lilFetch: Python dependencies installed ${installScope}.`);
   }
 
-  // Install Playwright browsers (for crawl4ai)
-  const pwInstall = spawnSync(venvPython, ['-m', 'playwright', 'install'], { stdio: 'inherit' });
+    // Explicitly install Playwright Python package (for crawl4ai)
+  const installPw = spawnSync(venvPip, ['install', 'playwright'], { stdio: 'inherit' });
+  if (installPw.status !== 0) {
+    console.error('lilFetch: Failed to install Playwright Python package.');
+    process.exit(1);
+  }
+  console.error('lilFetch: Playwright Python package installed.');
+
+  // Install Playwright browsers (for crawl4ai) - cross-platform
+  const pwArgs = isWindows ? ['-m', 'playwright', 'install'] : ['-m', 'playwright', 'install'];
+  const pwInstall = spawnSync(venvPython, pwArgs, { stdio: 'inherit' });
   if (pwInstall.status !== 0) {
-    const manualCmd = isGlobalInstall ? path.join(os.homedir(), '.lilfetch-venv', pythonBin) : path.join(process.cwd(), '.venv', pythonBin);
-    console.error('lilFetch: Failed to install Playwright browsers. Run manually:', manualCmd, '-m playwright install');
-    // Don't exit, as it might work without on some systems
+    const manualCmd = isGlobalInstall ? path.join(os.homedir(), '.lilfetch-venv', venvPythonDir, isWindows ? 'python.exe' : 'python') : path.join(process.cwd(), '.venv', venvPythonDir, isWindows ? 'python.exe' : 'python');
+    console.error(`lilFetch: Failed to install Playwright browsers ${installScope}. Run manually: ${manualCmd} ${isWindows ? '-m' : ''} playwright install`);
+    // Don't exit, as it might work without on some systems (e.g., if browsers are pre-installed)
   } else {
-    console.error('lilFetch: Playwright browsers installed.');
+    console.error(`lilFetch: Playwright browsers successfully installed ${installScope}.`);
   }
 
-  console.error('lilFetch: Setup complete!');
+  console.error(`lilFetch: ${installType} setup complete!`);
 }
 
 // Run it
-setupPython();
-console.log('Python setup complete for lilFetch!');
+installPythonDeps();
