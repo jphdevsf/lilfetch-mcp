@@ -1,0 +1,24 @@
+{
+  "name": "lilfetch",
+  "version": "1.0.0",
+  "description": "MCP server for scraping webpages to clean Markdown, wrapped for easy npx use.",
+  "main": "bin/lilfetch.js",
+  "bin": {
+    "lilfetch": "./bin/lilfetch.js"
+  },
+  "scripts": {
+    "postinstall": "node setup-python.js",
+    "pack": "npm pack",
+    "dev": "node bin/lilfetch.js",
+    "global-install": "npm install -g ."
+  },
+  "keywords": ["mcp", "scraper", "markdown", "web"],
+  "author": "Jacob",
+  "license": "MIT",
+  "dependencies": {
+    "child_process": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
