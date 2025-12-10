@@ -1,4 +1,4 @@
-# ![Lil Fetch Pug Icon](assets/lilfetch-icon.png) lilFetch 
+# <img src="assets/lilfetch-icon.svg" width="64" height="64"> lilFetch 
 An MCP (Model Context Protocol) server that scrapes webpages using [crawl4ai](https://github.com/unclecode/crawl4ai) and Playwright for more robust scraping. Tested on CoPilot in VSCode but may work for others.
 
 ## Features
