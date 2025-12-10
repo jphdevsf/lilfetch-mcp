@@ -1,6 +1,4 @@
-# UNDER CONSTRUCTION
-
-# lilFetch
+# ![Lil Fetch Pug Icon](assets/lilfetch-icon.png) lilFetch 
 An MCP (Model Context Protocol) server that scrapes webpages using [crawl4ai](https://github.com/unclecode/crawl4ai) and Playwright for more robust scraping. Tested on CoPilot in VSCode but may work for others.
 
 ## Features
@@ -148,5 +146,7 @@ For local: `rm -rf node_modules .venv` and verify no `./.bin/lilfetch`.
 - **Uninstall**:
   - Global: `npm uninstall -g lilfetch` + `rm -rf ~/.lilfetch-venv`.
   - Local: `rm -rf node_modules package-lock.json .venv`.
+
+૮₍ • ᴥ • ₎ა
 
 License: MIT
